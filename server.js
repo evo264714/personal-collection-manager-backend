@@ -125,10 +125,10 @@ const io = new Server(server, {
 app.use(bodyParser.json());
 
 // Jira API Information
-const JIRA_BASE_URL = 'https://mehedievo.atlassian.net/';
-const JIRA_API_TOKEN = '***REMOVED***45A05438';
-const JIRA_USER_EMAIL = 'mh264714@gmail.com';
-const JIRA_PROJECT_KEY = 'SCRUM';
+const JIRA_BASE_URL = process.env.JIRA_BASE_URL;
+const JIRA_API_TOKEN = process.env.JIRA_API_TOKEN;
+const JIRA_USER_EMAIL = process.env.JIRA_USER_EMAIL;
+const JIRA_PROJECT_KEY = process.env.JIRA_PROJECT_KEY;
 
 // Routes
 const authRoutes = require("./routes/authRoutes");
