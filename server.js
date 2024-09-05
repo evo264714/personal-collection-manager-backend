@@ -78,17 +78,6 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
@@ -124,13 +113,6 @@ const io = new Server(server, {
 
 app.use(bodyParser.json());
 
-// Jira API Information
-const JIRA_BASE_URL = process.env.JIRA_BASE_URL;
-const JIRA_API_TOKEN = process.env.JIRA_API_TOKEN;
-const JIRA_USER_EMAIL = process.env.JIRA_USER_EMAIL;
-const JIRA_PROJECT_KEY = process.env.JIRA_PROJECT_KEY;
-
-// Routes
 const authRoutes = require("./routes/authRoutes");
 const collectionRoutes = require("./routes/collectionRoutes");
 const userRoutes = require("./routes/userRoutes");
@@ -141,46 +123,41 @@ app.use("/api/collections", collectionRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/admin", adminRoutes);
 
-// Default route for server running
-app.get("/", (req, res) => {
-  res.send("Server is running");
-});
-
-// Jira Ticket Creation Endpoint
+// Add this for Jira integration
 app.post("/api/jira/create-ticket", async (req, res) => {
-  const { summary, priority, collection, link } = req.body;
+  const { summary, priority, collection, link, reporterEmail } = req.body;
 
   try {
-    // Make the POST request to Jira API to create a ticket
     const response = await axios.post(
-      `${JIRA_BASE_URL}/rest/api/3/issue`,
+      `${process.env.JIRA_BASE_URL}/rest/api/3/issue`,
       {
         fields: {
           project: {
-            key: JIRA_PROJECT_KEY,
+            key: process.env.JIRA_PROJECT_KEY, // Jira project key from env
           },
           summary,
           description: `Collection: ${collection}\nLink: ${link}`,
           issuetype: {
-            name: "Task",
+            name: "Task", // or "Bug", "Story", etc.
           },
           priority: {
             name: priority, // High, Medium, Low
           },
           reporter: {
-            emailAddress: JIRA_USER_EMAIL, // Use your Jira email for now (could be dynamic in the future)
+            emailAddress: reporterEmail, // The email address of the person reporting the issue
           },
         },
       },
       {
         headers: {
-          Authorization: `Basic ${Buffer.from(`${JIRA_USER_EMAIL}:${JIRA_API_TOKEN}`).toString("base64")}`,
+          Authorization: `Basic ${Buffer.from(
+            `${process.env.JIRA_USER_EMAIL}:${process.env.JIRA_API_TOKEN}`
+          ).toString("base64")}`,
           "Content-Type": "application/json",
         },
       }
     );
 
-    // Respond with the ticket URL or success message
     res.status(200).json({ ticketUrl: response.data.self });
   } catch (error) {
     console.error("Error creating Jira ticket:", error.message);
@@ -188,7 +165,6 @@ app.post("/api/jira/create-ticket", async (req, res) => {
   }
 });
 
-// Socket.IO connection handling
 io.on("connection", (socket) => {
   console.log("A user connected");
   socket.on("disconnect", () => {
@@ -196,16 +172,14 @@ io.on("connection", (socket) => {
   });
 });
 
-// Log incoming requests
-app.use((req, res, next) => {
-  console.log(`Incoming request: ${req.method} ${req.url}`);
-  next();
-});
-
-// Start the server
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+});
+
+app.use((req, res, next) => {
+  console.log(`Incoming request: ${req.method} ${req.url}`);
+  next();
 });
 
 global.io = io;
