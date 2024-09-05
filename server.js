@@ -85,6 +85,7 @@ const dotenv = require("dotenv");
 const http = require("http");
 const { Server } = require("socket.io");
 const axios = require("axios");
+const debug = require('debug')('app:log');
 
 dotenv.config();
 
@@ -124,6 +125,11 @@ app.use("/api/users", userRoutes);
 app.use("/api/admin", adminRoutes);
 
 // Add this for Jira integration
+app.use((req, res, next) => {
+  console.log(`Incoming request: ${req.method} ${req.url}`);
+  next();
+});
+
 app.post("/api/jira/create-ticket", async (req, res) => {
   const { summary, priority, collection, link, reporterEmail } = req.body;
 
@@ -133,18 +139,18 @@ app.post("/api/jira/create-ticket", async (req, res) => {
       {
         fields: {
           project: {
-            key: process.env.JIRA_PROJECT_KEY, // Jira project key from env
+            key: process.env.JIRA_PROJECT_KEY,
           },
           summary,
           description: `Collection: ${collection}\nLink: ${link}`,
           issuetype: {
-            name: "Task", // or "Bug", "Story", etc.
+            name: "Task",
           },
           priority: {
-            name: priority, // High, Medium, Low
+            name: priority,
           },
           reporter: {
-            emailAddress: reporterEmail, // The email address of the person reporting the issue
+            emailAddress: reporterEmail,
           },
         },
       },
@@ -161,9 +167,11 @@ app.post("/api/jira/create-ticket", async (req, res) => {
     res.status(200).json({ ticketUrl: response.data.self });
   } catch (error) {
     console.error("Error creating Jira ticket:", error.message);
+    console.error("Error details:", error.response ? error.response.data : error);
     res.status(500).json({ message: "Failed to create Jira ticket", error: error.message });
   }
 });
+
 
 io.on("connection", (socket) => {
   console.log("A user connected");
@@ -175,11 +183,6 @@ io.on("connection", (socket) => {
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-});
-
-app.use((req, res, next) => {
-  console.log(`Incoming request: ${req.method} ${req.url}`);
-  next();
 });
 
 global.io = io;
