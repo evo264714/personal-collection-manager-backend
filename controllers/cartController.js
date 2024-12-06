@@ -3,21 +3,15 @@ const client = require("../config/db");
 
 // Fetch cart items for the logged-in user
 const getCartItems = async (req, res) => {
-  try {
-    const db = client.db("collectionDB");
-    const cart = await db.collection("carts").findOne({ userId: req.user.uid });
-
-    if (!cart) {
-      return res.status(200).json([]);
+    try {
+      const db = client.db("collectionDB");
+      const cart = await db.collection("carts").findOne({ userId: req.user.uid });
+      res.status(200).json(cart ? cart.items : []); // Return an array of items
+    } catch (error) {
+      res.status(500).json({ error: error.message });
     }
-
-    return res.status(200).json(cart.items);
-  } catch (error) {
-    console.error("Error fetching cart items:", error.message);
-    return res.status(500).json({ error: "Failed to fetch cart items" });
-  }
-};
-
+  };
+  
 // Add item to the cart or increment the quantity if it already exists
 const addToCart = async (req, res) => {
   const { itemId, collectionId, itemName, imageURL } = req.body;
