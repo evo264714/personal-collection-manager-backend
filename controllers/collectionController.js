@@ -115,6 +115,78 @@ const deleteCollection = async (req, res) => {
   }
 };
 
+// const addItem = async (req, res) => {
+//   try {
+//     const db = client.db("collectionDB");
+//     const collection = await db
+//       .collection("collections")
+//       .findOne({ _id: new ObjectId(req.params.id) });
+
+//     if (!collection) {
+//       return res.status(404).json({ message: "Collection not found" });
+//     }
+
+//     if (collection.userId !== req.user.uid && req.user.role !== "admin") {
+//       return res.status(403).json({
+//         message:
+//           "Forbidden: You do not have permission to add items to this collection.",
+//       });
+//     }
+
+//     const newItem = { ...req.body, _id: new ObjectId(), createdAt: new Date() };
+
+//     const result = await db
+//       .collection("collections")
+//       .updateOne(
+//         { _id: new ObjectId(req.params.id) },
+//         { $push: { items: newItem } }
+//       );
+
+//     if (result.modifiedCount > 0) {
+//       io.emit("newItem", {
+//         item: newItem,
+//         collectionName: collection.name,
+//       });
+//     }
+
+//     res.status(200).json(result);
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 const addItem = async (req, res) => {
   try {
     const db = client.db("collectionDB");
@@ -133,7 +205,13 @@ const addItem = async (req, res) => {
       });
     }
 
-    const newItem = { ...req.body, _id: new ObjectId(), createdAt: new Date() };
+    const newItem = {
+      ...req.body,
+      _id: new ObjectId(),
+      createdAt: new Date(),
+      availableQuantity: req.body.availableQuantity || 0, // Add availableQuantity
+      quantity: 0, // Default quantity for cart
+    };
 
     const result = await db
       .collection("collections")
@@ -154,6 +232,33 @@ const addItem = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 const removeItem = async (req, res) => {
   try {
@@ -186,6 +291,66 @@ const removeItem = async (req, res) => {
   }
 };
 
+// const updateItem = async (req, res) => {
+//   try {
+//     const db = client.db("collectionDB");
+//     const collectionId = new ObjectId(req.params.collectionId);
+//     const itemId = new ObjectId(req.params.itemId);
+
+//     const collection = await db
+//       .collection("collections")
+//       .findOne({ _id: collectionId });
+//     const existingItem = collection.items.find((item) =>
+//       item._id.equals(itemId)
+//     );
+
+//     if (!existingItem) {
+//       return res.status(404).json({ message: "Item not found" });
+//     }
+
+//     if (collection.userId !== req.user.uid && req.user.role !== "admin") {
+//       return res.status(403).json({
+//         message: "Forbidden: You do not have permission to update this item.",
+//       });
+//     }
+
+//     const updatedItem = {
+//       ...existingItem,
+//       ...req.body,
+//       likes: existingItem.likes || [], 
+//       comments: existingItem.comments || [], 
+//     };
+
+//     const result = await db
+//       .collection("collections")
+//       .updateOne(
+//         { _id: collectionId, "items._id": itemId },
+//         { $set: { "items.$": updatedItem } }
+//       );
+
+//     res.status(200).json(result);
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 const updateItem = async (req, res) => {
   try {
     const db = client.db("collectionDB");
@@ -212,8 +377,9 @@ const updateItem = async (req, res) => {
     const updatedItem = {
       ...existingItem,
       ...req.body,
-      likes: existingItem.likes || [], 
-      comments: existingItem.comments || [], 
+      likes: existingItem.likes || [],
+      comments: existingItem.comments || [],
+      availableQuantity: req.body.availableQuantity || existingItem.availableQuantity, // Update availableQuantity
     };
 
     const result = await db
@@ -228,6 +394,41 @@ const updateItem = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 const likeItem = async (req, res) => {
   try {
